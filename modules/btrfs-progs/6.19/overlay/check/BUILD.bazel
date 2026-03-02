@@ -1,0 +1,36 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Header-only target; consumed by //cmds, //mkfs, and //common which reference
+# check/*.h headers without depending on the check binary's .c sources.
+cc_library(
+    name = "headers",
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+)
+
+# All check implementation sources compiled as a library.
+# btrfsck is a symlink to the main btrfs binary in the upstream build; these
+# sources are linked directly into //:btrfs and //mkfs:mkfs.btrfs.
+#
+# check/main.c directly references both opt_check_repair (from repair.c, in
+# this same archive) and clear-cache functions (from //common).  Because
+# check_lib.a is processed before common.a in the link order (//common is a
+# transitive dep of check_lib), repair.o is pulled in from check_lib.a first.
+# By the time common.a is processed and clear-cache.o is included, repair.o is
+# already in the symbol table — no alwayslink required.
+#
+# Note: check/main.c does NOT define main() — it defines cmd_struct_check.
+cc_library(
+    name = "check_lib",
+    srcs = glob(["*.c"]),
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        "//common",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+        "@libuuid//:libuuid",
+    ],
+)

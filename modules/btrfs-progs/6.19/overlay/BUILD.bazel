@@ -1,0 +1,32 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+alias(
+    name = "libbtrfsutil",
+    actual = "//libbtrfsutil",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "libbtrfs",
+    actual = "//libbtrfs",
+    visibility = ["//visibility:public"],
+)
+
+# Main btrfs administration tool.
+# btrfsck is a symlink to this binary in the upstream build; the check/
+# sources are linked directly here (not as a separate binary).
+cc_binary(
+    name = "btrfs",
+    srcs = ["btrfs.c"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//check:check_lib",
+        "//cmds",
+        "//common",
+        "//include",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+        "//mkfs:mkfs_lib",
+    ],
+)

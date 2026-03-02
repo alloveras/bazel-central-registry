@@ -1,0 +1,55 @@
+load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Generate config.h from the template.  The `substitutions` dict is the single
+# source of truth for all compile-time feature flags.  Use select() here in the
+# future to vary values per target platform without touching the template.
+expand_template(
+    name = "gen_config_h",
+    out = "config.h",
+    template = "config.h.in",
+    substitutions = {
+        # zstd is a bazel_dep; LZO is not yet in the BCR.
+        "@COMPRESSION_ZSTD@": "1",
+        "@COMPRESSION_LZO@": "0",
+        "@CRYPTOPROVIDER_BUILTIN@": "1",
+        "@CRYPTOPROVIDER_LIBGCRYPT@": "0",
+        "@CRYPTOPROVIDER_LIBSODIUM@": "0",
+        "@CRYPTOPROVIDER_LIBKCAPI@": "0",
+        "@CRYPTOPROVIDER_BOTAN@": "0",
+        "@CRYPTOPROVIDER_OPENSSL@": "0",
+        "@CRYPTOPROVIDER@": "builtin",
+        "@HAVE_LINUX_FSVERITY_H@": "1",
+        "@HAVE_LINUX_FIEMAP_H@": "1",
+        "@PACKAGE_STRING@": module_name() + " " + module_version(),
+        "@PACKAGE_URL@": "https://btrfs.readthedocs.io/",
+    },
+)
+
+cc_library(
+    name = "include",
+    hdrs = [
+        ":gen_config_h",
+        "kerncompat.h",
+    ],
+    # These defines mirror global -D flags that the Makefile passes via CFLAGS to
+    # all translation units.  They cannot be delivered solely through config.h
+    # because some headers (kernel-lib/, kernel-shared/) are included by source
+    # files that do not include config.h first.
+    defines = [
+        "BTRFS_FLAT_INCLUDES=1",
+        # Mirrors -std=gnu11 from the upstream Makefile: exposes GNU/Linux extensions
+        # (O_DIRECT, nftw/FTW_PHYS, memrchr, …) via glibc. _GNU_SOURCE is a superset
+        # of _XOPEN_SOURCE=700 so it covers all POSIX-2008 extensions too.
+        "_GNU_SOURCE",
+    ],
+    # "."  → adds -Iinclude (and -Ibazel-out/.../bin/include for the generated
+    #         config.h) so that #include "config.h" / "kerncompat.h" resolve.
+    # ".." → adds -I. (workspace root) so cross-dir includes like
+    #         #include "kernel-lib/rbtree.h" resolve for every consumer.
+    includes = [
+        ".",
+        "..",
+    ],
+    visibility = ["//visibility:public"],
+)

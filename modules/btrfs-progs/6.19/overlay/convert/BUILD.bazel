@@ -1,0 +1,19 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+# btrfs-convert requires ext2fs and com_err (from e2fsprogs), neither of
+# which is currently in the BCR.  The deps below use TODO placeholders;
+# add the real targets once those modules are published.
+cc_binary(
+    name = "btrfs-convert",
+    srcs = glob(["*.c"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        "//common",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+        # "@libext2fs//:libext2fs",  # TODO: e2fsprogs not yet in the BCR
+        # "@libcom_err//:libcom_err",  # TODO: e2fsprogs not yet in the BCR
+    ],
+)

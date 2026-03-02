@@ -1,0 +1,14 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_binary(
+    name = "btrfs-image",
+    srcs = glob(["*.c"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        "//common",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+    ],
+)

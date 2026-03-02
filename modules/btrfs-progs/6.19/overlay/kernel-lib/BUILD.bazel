@@ -1,0 +1,29 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Header-only target consumed by //libbtrfs and other packages that need
+# kernel-lib headers but whose own sources are depended on by kernel-lib
+# (breaking the would-be circular dep at the source level).
+cc_library(
+    name = "headers",
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "kernel-lib",
+    srcs = [
+        "list_sort.c",
+        "raid56.c",
+        "rbtree.c",
+        "tables.c",
+    ],
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        # raid56.c includes kernel-shared/volumes.h and common/messages.h;
+        # header-only deps supply the files without creating a dep cycle.
+        "//common:headers",
+        "//kernel-shared:headers",
+    ],
+)

@@ -1,0 +1,27 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Header-only target; allows //mkfs:mkfs.btrfs to include "cmds/commands.h"
+# for type definitions without pulling in the cmds .c sources.
+cc_library(
+    name = "headers",
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+)
+
+# All btrfs sub-command implementations, linked into the main btrfs binary.
+cc_library(
+    name = "cmds",
+    srcs = glob(["*.c"]),
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//check:headers",
+        "//include",
+        "//common",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+        "//mkfs:headers",
+        "@libuuid//:libuuid",
+    ],
+)

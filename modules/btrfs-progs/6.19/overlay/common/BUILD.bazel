@@ -1,0 +1,78 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Header-only target; consumed by //kernel-lib/raid56.c to obtain
+# common/messages.h without creating a dep cycle.
+cc_library(
+    name = "headers",
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+)
+
+# ── Dependency-free base: extent cache + rbtree utils ─────────────────────
+# extent-cache.c and rbtree-utils.c have no dependency on //kernel-shared or
+# //check, so they can be split into their own target.  This is the key that
+# eliminates the alwayslink requirement:
+#
+#   //kernel-shared:kernel-shared explicitly depends on :extent_cache, so the
+#   linker link order becomes:
+#       ... common.a ... kernel-shared.a ... extent_cache.a ...
+#   When kernel-shared.a is processed (lazily) its objects reference
+#   cache_tree_init; that symbol is undefined at that point.  When
+#   extent_cache.a is processed next, extent-cache.o is pulled in and
+#   satisfies all pending cache_tree_init references — no alwayslink needed.
+cc_library(
+    name = "extent_cache",
+    srcs = [
+        "extent-cache.c",
+        "rbtree-utils.c",
+    ],
+    hdrs = [
+        "extent-cache.h",
+        "rbtree-utils.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        "//kernel-lib",
+    ],
+)
+
+cc_library(
+    name = "common",
+    # extent-cache.c and rbtree-utils.c are in :extent_cache to break the
+    # ordering deadlock with //kernel-shared (see comment above).
+    srcs = glob(
+        ["*.c"],
+        exclude = [
+            "extent-cache.c",
+            "rbtree-utils.c",
+        ],
+    ),
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    # alwayslink is required because kernel-shared objects call common
+    # functions (btrfs_no_printk, strncpy_null, div_factor, …).  The linker
+    # processes common.a before kernel-shared.a (common → kernel-shared in
+    # the dep graph), so without alwayslink those common objects are not yet
+    # pulled when kernel-shared.a is processed and kernel-shared objects
+    # would have undefined references.
+    #
+    # check-compat.c (in this package) provides weak-link defaults for the
+    # two check/ symbols that clear-cache.c references, so binaries that do
+    # not link //check:check_lib (tests, hash-vectest, …) still link cleanly.
+    alwayslink = True,
+    deps = [
+        ":extent_cache",
+        "//check:headers",
+        "//cmds:headers",
+        "//include",
+        "//kernel-lib",
+        "//kernel-shared",
+        "//libbtrfsutil",
+        "//mkfs:headers",
+        "@libuuid//:libuuid",
+    ],
+    # device-scan.c and device-utils.c call blkid_*; propagates to every
+    # binary / test that depends on //common.
+    linkopts = ["-lblkid"],  # TODO: replace with BCR dep when util-linux is available
+)

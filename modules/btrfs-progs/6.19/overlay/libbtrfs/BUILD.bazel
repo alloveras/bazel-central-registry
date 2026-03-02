@@ -1,0 +1,19 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Low-level btrfs library: send/receive stream handling and CRC32C.
+# The upstream static archive (libbtrfs.a) bundles kernel-lib/rbtree.o;
+# here we express that as a Bazel dependency instead.
+cc_library(
+    name = "libbtrfs",
+    srcs = [
+        "crc32c.c",
+        "send-stream.c",
+        "send-utils.c",
+    ],
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include",
+        "//kernel-lib",
+    ],
+)

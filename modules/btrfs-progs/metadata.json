@@ -1,0 +1,16 @@
+{
+    "homepage": "https://btrfs.readthedocs.io/en/latest/",
+    "maintainers": [
+        {
+            "github": "alloveras",
+            "github_user_id": 10152702
+        }
+    ],
+    "repository": [
+        "https://github.com/kdave/btrfs-progs"
+    ],
+    "versions": [
+        "6.19"
+    ],
+    "yanked_versions": {}
+}

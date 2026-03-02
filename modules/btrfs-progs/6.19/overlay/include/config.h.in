@@ -1,0 +1,40 @@
+/*
+ * config.h.in — Bazel template for btrfs-progs (replaces the autoconf version).
+ *
+ * expand_template() in include/BUILD.bazel substitutes each @VAR@ token with
+ * the value defined in its `substitutions` dict, which is the single source of
+ * truth for all compile-time feature flags.  Use select() there to vary values
+ * per target platform in the future.
+ */
+
+#ifndef _BTRFS_CONFIG_H
+#define _BTRFS_CONFIG_H
+
+/* ── Compression codecs ─────────────────────────────────────────────────── */
+/* Passed as -D flags via Makefile.inc.in in the autoconf build; we define them
+ * here so all translation units see them via config.h.
+ * COMPRESSION_LZO: intentionally disabled (liblzo2 is not yet in the BCR). */
+#define COMPRESSION_ZSTD @COMPRESSION_ZSTD@
+#define COMPRESSION_LZO  @COMPRESSION_LZO@
+
+/* ── Crypto provider ────────────────────────────────────────────────────── */
+/* Use the built-in implementations (blake2b, sha256, crc32c, xxhash). */
+#define CRYPTOPROVIDER_BUILTIN  @CRYPTOPROVIDER_BUILTIN@
+#define CRYPTOPROVIDER_LIBGCRYPT @CRYPTOPROVIDER_LIBGCRYPT@
+#define CRYPTOPROVIDER_LIBSODIUM @CRYPTOPROVIDER_LIBSODIUM@
+#define CRYPTOPROVIDER_LIBKCAPI  @CRYPTOPROVIDER_LIBKCAPI@
+#define CRYPTOPROVIDER_BOTAN     @CRYPTOPROVIDER_BOTAN@
+#define CRYPTOPROVIDER_OPENSSL   @CRYPTOPROVIDER_OPENSSL@
+/* Human-readable name of the selected crypto provider (string literal). */
+#define CRYPTOPROVIDER "@CRYPTOPROVIDER@"
+
+/* ── Kernel header availability ─────────────────────────────────────────── */
+#define HAVE_LINUX_FSVERITY_H @HAVE_LINUX_FSVERITY_H@
+/* linux/fiemap.h is present on all modern Linux targets we support. */
+#define HAVE_LINUX_FIEMAP_H @HAVE_LINUX_FIEMAP_H@
+
+/* ── Package metadata ───────────────────────────────────────────────────── */
+#define PACKAGE_STRING "@PACKAGE_STRING@"
+#define PACKAGE_URL    "@PACKAGE_URL@"
+
+#endif /* _BTRFS_CONFIG_H */

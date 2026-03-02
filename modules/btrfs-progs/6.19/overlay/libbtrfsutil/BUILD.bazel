@@ -1,0 +1,27 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "libbtrfsutil",
+    srcs = [
+        "errors.c",
+        "filesystem.c",
+        "qgroup.c",
+        "stubs.c",
+        "subvolume.c",
+        # Private headers
+        "btrfs.h",
+        "btrfs_tree.h",
+        "btrfsutil_internal.h",
+        "stubs.h",
+    ],
+    hdrs = ["btrfsutil.h"],
+    copts = ["-fvisibility=hidden"],
+    # Adds libbtrfsutil/ to the include path so internal headers are found
+    # as bare filenames, and consumers can use #include <btrfsutil.h>.
+    includes = ["."],
+    # HAVE_REALLOCARRAY is used by libbtrfsutil's own sources; kept as a
+    # local_define rather than depending on //include since
+    # libbtrfsutil is a self-contained library with no btrfs-progs internals.
+    local_defines = ["HAVE_REALLOCARRAY=1"],
+    visibility = ["//visibility:public"],
+)

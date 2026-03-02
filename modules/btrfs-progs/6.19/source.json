@@ -1,0 +1,31 @@
+{
+    "url": "https://github.com/kdave/btrfs-progs/archive/refs/tags/v6.19.tar.gz",
+    "strip_prefix": "btrfs-progs-6.19",
+    "integrity": "sha256-YFR4Esc5c5HqSKgE7K+g2LigKpcItWgYvqYDhg3EEo0=",
+    "overlay": {
+        "BUILD.bazel": "sha256-htRNGK/gSO4BNkGOFqKMvjY4QEoqNaMgQ4O9MhS2ZM4=",
+        "MODULE.bazel": "sha256-EYuV75OdSQjhMBD0BeXI59lXl+T07/Cz8YpsjRO6bnc=",
+        "check/BUILD.bazel": "sha256-KhuFS85HRTED5XaeWvmRV1TzoKex9xJsXLL1H0J4+Rw=",
+        "cmds/BUILD.bazel": "sha256-+JS+gSU051wh9YuAxPHiXYcrjp8zhD3wUUGAqI+Mv+k=",
+        "common/BUILD.bazel": "sha256-Fh6TEKQd4wUQSkP6HiYG7z1QsYQYP9BfnUaid9hn50k=",
+        "common/check-compat.c": "sha256-Q3vRgMbMoLS7soGslco5Tpbtijttz5ceKYmiSdopY30=",
+        "convert/BUILD.bazel": "sha256-uccArNjYl04Eg+Fm/MvM0iRDvZJXzfhY91Dkq6I5BUk=",
+        "crypto/BUILD.bazel": "sha256-VoN6ErNfBXQvxl81l3lAxzfNsM4VOKj7q7GW0EujM3U=",
+        "image/BUILD.bazel": "sha256-uZOMAhPYh8dQeWXD8ABYzhsvAAr6onQMBikgw4zv9Ok=",
+        "include/BUILD.bazel": "sha256-+G8iU1UmX941dDK1L5kXfImmBMJTxqFJJTX+ihYlI1g=",
+        "include/config.h.in": "sha256-1blxrwc4M8oMu+/hNjt8SMJge2olQZwa09j1XdV5bNc=",
+        "kernel-lib/BUILD.bazel": "sha256-T5IBy2kPLlU7+bSxS7bO0dreKz4+3+WtDk4v0mBorwI=",
+        "kernel-shared/BUILD.bazel": "sha256-ejBt9eLHut89olgSYhbaraImQQRvqg+si3mayZfiAlQ=",
+        "libbtrfs/BUILD.bazel": "sha256-I1M3DKdwXUWr5AbqZFM9s+WuLAHRaKblGpg4Gc8WO5E=",
+        "libbtrfs/rbtree_types.h": "sha256-6NXutULP7GIYv33CX9NAE2VL6yM6BbOdVbRSw4HAUpE=",
+        "libbtrfs/version.h": "sha256-6fzJV+zaepLdiwFOK3a2PmoZHF+M3C6vWuYtUDwOXM8=",
+        "libbtrfsutil/BUILD.bazel": "sha256-mAI9HYmGIgoPWI2hpy7m+RayWpAwL0QgOe9bZX7G4yI=",
+        "mkfs/BUILD.bazel": "sha256-dAYaBIrFnVYd2fzsPd7MZsPBY4uNe01fQxhnYPfL0hc=",
+        "tests/BUILD.bazel": "sha256-UrYfvqQjPLlKWUDQA1FKXtdNhRw0B72rNcjG0QuiCGo=",
+        "tune/BUILD.bazel": "sha256-VAkzYXUl52XLbHjskCIoFwAhQSdKoUn573Xe3D8ImxQ="
+    },
+    "patch_strip": 1,
+    "patches": {
+        "kerncompat_include_config.patch": "sha256-worVbzsErlXzoFei/6IW9rS7cSpKt54ZI35YJOzVc2w="
+    }
+}

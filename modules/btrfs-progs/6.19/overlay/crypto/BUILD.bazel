@@ -1,0 +1,112 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+# Header-only target; allows //kernel-shared:headers to expose crypto headers
+# transitively (ctree.h includes crypto/crc32c.h) without pulling in .c sources.
+cc_library(
+    name = "headers",
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+)
+
+# ── Per-SIMD-width helpers ────────────────────────────────────────────────
+# Each file requires a specific -m flag; keep them in separate targets so
+# the flag applies only to the matching source file.
+
+cc_library(
+    name = "_blake2b_sse2",
+    srcs = ["blake2b-sse2.c"],
+    hdrs = glob(["*.h"]),
+    copts = ["-msse2"],
+    deps = ["//include"],
+)
+
+cc_library(
+    name = "_blake2b_sse41",
+    srcs = ["blake2b-sse41.c"],
+    hdrs = glob(["*.h"]),
+    copts = ["-msse4.1"],
+    deps = ["//include"],
+)
+
+cc_library(
+    name = "_blake2b_avx2",
+    srcs = ["blake2b-avx2.c"],
+    hdrs = glob(["*.h"]),
+    copts = ["-mavx2"],
+    deps = ["//include"],
+)
+
+cc_library(
+    name = "_sha256_x86",
+    srcs = ["sha256-x86.c"],
+    hdrs = glob(["*.h"]),
+    copts = [
+        "-msha",
+        "-msse4.1",
+    ],
+    deps = ["//include"],
+)
+
+# ── Main crypto library ───────────────────────────────────────────────────
+# hash.c dispatches to the SIMD implementations at runtime via
+# blake2_init_accel() / sha256_init_accel() / crc32c_init_accel().
+# On x86-64 all SIMD variants are compiled in; on other architectures
+# only the portable reference implementations are used.
+
+cc_library(
+    name = "crypto",
+    srcs = [
+        "blake2b-ref.c",
+        "crc32c.c",
+        "hash.c",
+        "sha224-256.c",
+        "xxhash.c",
+    ] + select({
+        "@platforms//cpu:x86_64": ["crc32c-pcl-intel-asm_64.S"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:headers",
+        "//include",
+    ] + select({
+        "@platforms//cpu:x86_64": [
+            ":_blake2b_sse2",
+            ":_blake2b_sse41",
+            ":_blake2b_avx2",
+            ":_sha256_x86",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+# ── Test / diagnostic binaries ────────────────────────────────────────────
+
+# hash-vectest: runs hash algorithm test vectors and prints MATCH / MISMATCH.
+# Built as cc_binary (not cc_test) because it always exits 0 regardless of
+# whether vectors matched — it is a diagnostic tool, not a pass/fail test.
+cc_binary(
+    name = "hash-vectest",
+    srcs = ["hash-vectest.c"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":crypto",
+        "//common",
+        "//include",
+    ],
+)
+
+# hash-speedtest: benchmarks hash implementations using Linux perf counters.
+# Informational only — not a correctness test.
+cc_binary(
+    name = "hash-speedtest",
+    srcs = ["hash-speedtest.c"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":crypto",
+        "//common",
+        "//include",
+    ],
+)

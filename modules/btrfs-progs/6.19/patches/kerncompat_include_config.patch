@@ -1,0 +1,12 @@
+--- a/include/kerncompat.h
++++ b/include/kerncompat.h
+@@ -19,6 +19,9 @@
+ #ifndef __KERNCOMPAT_H__
+ #define __KERNCOMPAT_H__
+
++/* Replicate the upstream Makefile's -include include/config.h behaviour. */
++#include "config.h"
++
+ #ifndef __SANE_USERSPACE_TYPES__
+ /* For PPC64 to get LL64 types */
+ #define __SANE_USERSPACE_TYPES__

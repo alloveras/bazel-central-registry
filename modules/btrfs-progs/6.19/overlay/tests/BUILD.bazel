@@ -1,0 +1,95 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+# ── Unit / API tests (cc_test) ────────────────────────────────────────────
+
+cc_test(
+    name = "array-test",
+    srcs = ["array-test.c"],
+    deps = [
+        "//common",
+        "//include",
+    ],
+)
+
+cc_test(
+    name = "string-table-test",
+    srcs = ["string-table-test.c"],
+    deps = [
+        "//common",
+        "//include",
+    ],
+)
+
+# btree-test is excluded from cc_test: it is an integration test that requires
+# a pre-formatted btrfs disk image as argv[1] ("btree-test <image>").  When
+# invoked without arguments it immediately exits with code 1 ("ERROR:
+# btree-test image"), making it unsuitable as a self-contained Bazel cc_test.
+# The binary is kept as cc_binary so it can be built for manual testing.
+cc_binary(
+    name = "btree-test",
+    srcs = ["btree-test.c"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common",
+        "//include",
+        "//kernel-shared",
+    ],
+)
+
+cc_test(
+    name = "ioctl-test",
+    srcs = ["ioctl-test.c"],
+    deps = [
+        # ioctl-test only uses kernel-shared headers, but kernel-shared's
+        # own sources reference common/* symbols (messages.c, cpu-utils.c),
+        # so //common must be in the link closure to satisfy them.
+        "//common",
+        "//include",
+        "//kernel-shared",
+    ],
+)
+
+cc_test(
+    name = "json-formatter-test",
+    srcs = ["json-formatter-test.c"],
+    deps = [
+        # Only needs CMD_FORMAT_JSON (enum) from cmds/commands.h, not any
+        # cmds/*.c implementations.  Using :headers avoids building libcmds.so
+        # (which has unresolvable symbols: handle_command_group defined in
+        # btrfs.c, test_dev_for_mkfs defined in mkfs/common.c).
+        "//cmds:headers",
+        "//common",
+        "//include",
+        "@libuuid//:libuuid",
+    ],
+)
+
+# library-test is excluded: it validates the *installed* public libbtrfs API
+# (the "btrfs/..." include path downstream consumers use after `make install`).
+# That installed layout does not exist in a Bazel in-source build.  With
+# BTRFS_FLAT_INCLUDES=1 (universal in this build) the test's #if branch
+# simultaneously includes libbtrfs/ioctl.h (__BTRFS_IOCTL_H__) and
+# kernel-shared/ctree.h → kernel-shared/uapi/btrfs.h (_UAPI_LINUX_BTRFS_H),
+# causing struct redefinition errors.  The #else branch requires a "btrfs/"
+# include directory that only exists in the installed layout, not in-source.
+# cc_test(name = "library-test", ...)
+
+# ── Test helper binaries (cc_binary) ─────────────────────────────────────
+
+# fssum: computes a SHA-256 checksum of a directory tree; used by the
+# shell-based integration tests to verify filesystem state.
+cc_binary(
+    name = "fssum",
+    srcs = ["fssum.c"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//crypto",
+        "//include",
+    ],
+)
+
+# fsstress is excluded: lines 37-38 of fsstress.c unconditionally define
+# AIO and URING (#define AIO / #define URING), pulling in libaio and
+# liburing which are not yet in the BCR.
+# cc_binary(name = "fsstress", ...)
