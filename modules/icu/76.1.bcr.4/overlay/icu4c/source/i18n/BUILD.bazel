@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# Monolithic libicui18n: all i18n sources compiled together.
+# Internal top-level *.h files are in srcs (not exported).
+# Public unicode/*.h are in hdrs (propagated to consumers).
+cc_library(
+    name = "icui18n",
+    srcs = glob([
+        "*.cpp",
+        "*.h",
+    ]),
+    hdrs = glob(["unicode/*.h"]),
+    includes = ["."],
+    local_defines = ["U_I18N_IMPLEMENTATION"],
+    visibility = [
+        "//:__pkg__",
+        "//icu4c/source:__subpackages__",
+    ],
+    deps = [
+        "//icu4c/source/common:icuuc",
+    ],
+)
+
+# Exposes the vendored double-conversion header for test code that directly
+# exercises the double-conversion API (intltest/numbertest_doubleconversion.cpp).
+# This header is NOT part of ICU's public API and, hence, must not be exported.
+cc_library(
+    name = "double-conversion",
+    hdrs = ["double-conversion.h"],
+    includes = ["."],
+    visibility = ["//icu4c/source/test/intltest:__pkg__"],
+)

@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# Monolithic libicuio: Unicode stdio / C++ stream wrappers.
+# Internal top-level *.h files are in srcs (not exported).
+# Public unicode/*.h (ustdio.h, ustream.h) are in hdrs (propagated to consumers).
+cc_library(
+    name = "icuio",
+    srcs = glob([
+        "*.cpp",
+        "*.h",
+    ]),
+    hdrs = glob(["unicode/*.h"]),
+    includes = ["."],
+    local_defines = ["U_IO_IMPLEMENTATION"],
+    visibility = [
+        "//:__pkg__",
+        "//icu4c/source:__subpackages__",
+    ],
+    deps = [
+        "//icu4c/source/common:icuuc",
+        "//icu4c/source/i18n:icui18n",
+    ],
+)

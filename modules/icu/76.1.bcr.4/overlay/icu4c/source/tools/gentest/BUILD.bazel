@@ -1,0 +1,11 @@
+load("//icu4c/source/tools:bootstrap.bzl", "bootstrap_cc_binary")
+
+bootstrap_cc_binary(
+    name = "gentest",
+    srcs = glob([
+        "*.c",
+        "*.h",
+    ]),
+    visibility = ["//icu4c/source/tools:__pkg__"],
+    deps = ["//icu4c/source/tools/toolutil"],
+)
